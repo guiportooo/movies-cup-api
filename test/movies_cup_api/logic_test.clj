@@ -9,6 +9,7 @@
             [clojure.test.check.generators :as gen]
             [clojure.test.check.properties :as prop]))
 
+
 (s/set-fn-validation! true)
 
 

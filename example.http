@@ -1,17 +1,21 @@
+@apiUrl = http://localhost:8080
+@cupId = xxxxxxxxxxxxxxxxxxxxxxxxx 
+
+
 ### Home
-GET http://localhost:8080/
+GET {{apiUrl}}
 
 
 ### Movies
 
 ### Fetch all movies
-GET http://localhost:8080/movies
+GET {{apiUrl}}/movies
 
 
 ### Cups
 
 ### Run a cup
-POST http://localhost:8080/cups
+POST {{apiUrl}}/cups
 Content-Type: application/json
 
 [
@@ -64,3 +68,9 @@ Content-Type: application/json
         "rating": 9.5
     }
 ]
+
+### Fetch all cups
+GET {{apiUrl}}/cups
+
+### Fetch cup
+GET {{apiUrl}}/cups/{{cupId}}

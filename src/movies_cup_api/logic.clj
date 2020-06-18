@@ -5,9 +5,6 @@
             [clojure.string :as str]))
 
 
-(s/set-fn-validation! true)
-
-
 (s/defn phase-one-matches :- [m/Match]
   [movies :- [m/Movie]
    matches :- [m/Match]]
@@ -58,16 +55,17 @@
 
 
 (s/defn finals :- m/CupResult
-  ([id :- s/Str
-    last-match :- m/MatchResult]
-   {:id id
-    :first (:winner last-match)
-    :second (:loser last-match)}))
+  [id :- s/Str
+   last-match :- m/MatchResult]
+  {:id id
+   :first (:winner last-match)
+   :second (:loser last-match)})
 
 
 (s/defn titleless? :- s/Bool
   [movie :- m/Movie]
   (str/blank? (:title movie)))
+
 
 (s/defn movies-cup :- m/CupResult
   ([movies :- [m/Movie]]

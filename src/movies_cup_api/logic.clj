@@ -1,6 +1,6 @@
 (ns movies-cup-api.logic
+  (:import (java.util UUID))
   (:require [movies-cup-api.model :as m]
-            [movies-cup-api.seed :as seed]
             [schema.core :as s]
             [clojure.string :as str]))
 
@@ -58,21 +58,25 @@
 
 
 (s/defn finals :- m/CupResult
-  [last-match :- m/MatchResult]
-  {:first (:winner last-match)
-   :second (:loser last-match)})
+  ([id :- s/Str
+    last-match :- m/MatchResult]
+   {:id id
+    :first (:winner last-match)
+    :second (:loser last-match)}))
 
 
 (s/defn titleless? :- s/Bool
   [movie :- m/Movie]
   (str/blank? (:title movie)))
 
-
 (s/defn movies-cup :- m/CupResult
-  [movies :- [m/Movie]]
-  {:pre [(= (count movies) 8)
-         (empty? (filter titleless? movies))]}
-  (-> movies
-      phase-one
-      phase-two
-      finals))
+  ([movies :- [m/Movie]]
+   (movies-cup (str (UUID/randomUUID)) movies))
+  
+  ([id :- s/Str
+    movies :- [m/Movie]]
+   {:pre [(= (count movies) 8)
+          (empty? (filter titleless? movies))]}
+   (let [phase-one-result (phase-one movies)
+         phase-two-result (phase-two phase-one-result)]
+     (finals id phase-two-result))))

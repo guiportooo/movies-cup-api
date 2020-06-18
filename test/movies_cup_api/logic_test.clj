@@ -1,4 +1,5 @@
 (ns movies-cup-api.logic-test
+  (:import (java.util UUID))
   (:require [movies-cup-api.logic :as l]
             [movies-cup-api.model :as m]
             [clojure.test :refer :all]
@@ -7,6 +8,7 @@
             [clojure.test.check.clojure-test :refer [defspec]]
             [clojure.test.check.generators :as gen]
             [clojure.test.check.properties :as prop]))
+
 
 (s/set-fn-validation! true)
 
@@ -90,10 +92,11 @@
 
 
   (testing "Returns first and second placed movies"
-    (are [result movies] (= result (l/movies-cup movies))
-      {:first movie6 :second movie1} sorted-movies
-      {:first movie6 :second movie1} reversed-movies
-      {:first movie6 :second movie1} unsorted-movies)))
+(let [id (str (UUID/randomUUID))]
+  (are [result movies] (= result (l/movies-cup id movies))
+    {:id id :first movie6 :second movie1} sorted-movies
+    {:id id :first movie6 :second movie1} reversed-movies
+    {:id id :first movie6 :second movie1} unsorted-movies))))
 
 
 (defspec first-place-is-always-highest-rating 100

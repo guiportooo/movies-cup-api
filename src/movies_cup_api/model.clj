@@ -16,5 +16,6 @@
                   :loser Movie})
 
 
-(def CupResult {:first Movie
+(def CupResult {:id s/Str
+                :first Movie
                 :second Movie})

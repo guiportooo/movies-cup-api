@@ -1,7 +1,7 @@
 (ns movies-cup-api.logic-test
   (:import (java.util UUID))
-  (:require [movies-cup-api.logic :as l]
-            [movies-cup-api.model :as m]
+  (:require [movies-cup-api.logic :as logic]
+            [movies-cup-api.model :as model]
             [clojure.test :refer :all]
             [schema.core :as s]
             [schema-generators.generators :as g]
@@ -69,7 +69,7 @@
 
 
 (def movie-generator
-  (g/generator m/Movie {s/Str (gen/fmap not-empty-str gen/string-alphanumeric)
+  (g/generator model/Movie {s/Str (gen/fmap not-empty-str gen/string-alphanumeric)
                         s/Int gen/pos-int
                         s/Num (gen/double* {:min 0})}))
 
@@ -81,19 +81,19 @@
 
 (deftest movies-cup-test
   (testing "Throws error when movies count is different than 8"
-    (are [movies] (thrown? AssertionError (l/movies-cup movies))
+    (are [movies] (thrown? AssertionError (logic/movies-cup movies))
       (gen/generate (movies-generator 7))
       (gen/generate (movies-generator 9))))
 
 
   (testing "Throws error when there is at least one titleless movie"
     (is (thrown? AssertionError
-                 (l/movies-cup movies-with-titleless))))
+                 (logic/movies-cup movies-with-titleless))))
 
 
   (testing "Returns first and second placed movies"
 (let [id (str (UUID/randomUUID))]
-  (are [result movies] (= result (l/movies-cup id movies))
+  (are [result movies] (= result (logic/movies-cup id movies))
     {:id id :first movie6 :second movie1} sorted-movies
     {:id id :first movie6 :second movie1} reversed-movies
     {:id id :first movie6 :second movie1} unsorted-movies))))
@@ -106,7 +106,7 @@
                              (map :rating)
                              sort
                              last)]
-     (= highest-rating (get-in (l/movies-cup movies) [:first :rating])))))
+     (= highest-rating (get-in (logic/movies-cup movies) [:first :rating])))))
 
 
 (deftest phase-one-test
@@ -115,7 +115,7 @@
                             {:left movie2 :right movie7}
                             {:left movie3 :right movie6}
                             {:left movie4 :right movie5}]]
-      (are [matches movies] (= matches (l/phase-one movies))
+      (are [matches movies] (= matches (logic/phase-one movies))
         expected-matches sorted-movies
         expected-matches reversed-movies
         expected-matches unsorted-movies))))
@@ -123,14 +123,14 @@
 
 (deftest match-result-test
   (testing "Returns winner as the best rated movie and loser as the worst rated one"
-    (are [result match] (= result (l/match-result match))
+    (are [result match] (= result (logic/match-result match))
       {:winner movie3 :loser movie1} {:left movie1 :right movie3}
       {:winner movie4 :loser movie7} {:left movie4 :right movie7}
       {:winner movie6 :loser movie8} {:left movie8 :right movie6}))
 
 
   (testing "Applies alphabetical order as tiebreaker"
-    (are [result match] (= result (l/match-result match))
+    (are [result match] (= result (logic/match-result match))
       {:winner movie1 :loser movie2} {:left movie1 :right movie2}
       {:winner movie2 :loser movie8} {:left movie8 :right movie2})))
 
@@ -153,7 +153,7 @@
 
 (deftest phase-two-test
   (testing "Runs rounds between first x second, third x fourth, etc. and returns final result"
-    (are [result initial-matches] (= result (l/phase-two initial-matches))
+    (are [result initial-matches] (= result (logic/phase-two initial-matches))
       {:winner movie6 :loser movie1} phase-two-matches1
       {:winner movie6 :loser movie3} phase-two-matches2
       {:winner movie6 :loser movie2} phase-two-matches3)))

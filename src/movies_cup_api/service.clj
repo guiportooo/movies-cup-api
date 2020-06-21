@@ -2,6 +2,7 @@
   (:require [io.pedestal.http :as http]
             [io.pedestal.http.route :as route]
             [io.pedestal.http.body-params :as body-params]
+            [io.pedestal.interceptor.error :as error]
             [ring.util.response :as ring-resp]
             [movies-cup-api.seed :as s]
             [movies-cup-api.logic :as l]
@@ -38,7 +39,17 @@
     (ring-resp/response (db/cup id))))
 
 
-(def common-interceptors [(body-params/body-params) http/json-body])
+(def error-interceptor
+  (error/error-dispatch
+   [ctx ex]
+   [{:exception-type :java.lang.AssertionError}]
+   (assoc ctx :response (ring-resp/bad-request (:cause (Throwable->map ex))))
+
+   :else
+   (assoc ctx :io.pedestal.interceptor.chain/error ex)))
+
+
+(def common-interceptors [error-interceptor (body-params/body-params) http/json-body])
 
 
 (def routes #{["/" :get (conj common-interceptors `home-page)]

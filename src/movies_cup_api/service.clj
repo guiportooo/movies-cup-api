@@ -24,11 +24,12 @@
 
 (defn create-cup
   [request]
-  (let [ids       (:json-params request)
-        movies    (logic/filtered-movies seed/movies ids)
-        cup       (logic/movies-cup movies)
-        viewmodel (mapper/cup-model->cup-viewmodel cup)
-        url       (route/url-for ::get-cup :params {:cup-id (:id cup)})]
+  (let [ids                  (:json-params request)
+        participating-movies (mapper/participating-movies ids)
+        movies               (logic/filtered-movies seed/movies participating-movies)
+        cup                  (logic/movies-cup movies)
+        viewmodel            (mapper/cup-model->cup-viewmodel cup)
+        url                  (route/url-for ::get-cup :params {:cup-id (:id cup)})]
     (db/add-cup! cup)
     (ring-resp/created url viewmodel)))
 
@@ -53,6 +54,10 @@
 (def error-interceptor
   (error/error-dispatch
    [ctx ex]
+   [{:exception-type :clojure.lang.ExceptionInfo}]
+   (assoc ctx :response (ring-resp/bad-request 
+                         (mapper/message->response-error (:cause (Throwable->map ex)))))
+
    [{:exception-type :java.lang.AssertionError}]
    (assoc ctx :response (ring-resp/bad-request 
                          (mapper/message->response-error (:cause (Throwable->map ex)))))

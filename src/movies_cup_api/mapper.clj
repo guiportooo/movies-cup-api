@@ -29,3 +29,8 @@
 (s/defn cups-model->cups-viewmodel :- [viewmodel/Cup]
   [cups-model :- [model/CupResult]]
   (map cup-model->cup-viewmodel cups-model))
+
+
+(s/defn message->response-error :- [viewmodel/ResponseError]
+  [message :- s/Str]
+  {:message message})

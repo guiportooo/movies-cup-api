@@ -10,3 +10,5 @@
 (def Cup {:id s/Str
           :first Movie
           :second Movie})
+
+(def ResponseError {:message s/Str})

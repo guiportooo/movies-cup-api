@@ -6,7 +6,8 @@
             [ring.util.response :as ring-resp]
             [movies-cup-api.seed :as seed]
             [movies-cup-api.logic :as logic]
-            [movies-cup-api.db :as db]))
+            [movies-cup-api.db :as db]
+            [movies-cup-api.mapper :as mapper]))
 
 
 (defn error-body 
@@ -21,7 +22,9 @@
 
 (defn get-movies
   [request]
-  (ring-resp/response seed/movies))
+  (let [movies-model seed/movies
+        movies-viewmodel (mapper/movies-model->movies-viewmodel movies-model)]
+    (ring-resp/response movies-viewmodel)))
 
 
 (defn create-cup

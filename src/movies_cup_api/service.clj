@@ -9,6 +9,11 @@
             [movies-cup-api.db :as db]))
 
 
+(defn error-body 
+  [message]
+  {:message message})
+
+
 (defn home-page
   [request]
   (ring-resp/response "Movies Cup Api"))
@@ -35,21 +40,26 @@
 
 (defn get-cup
   [request]
-  (let [{{id :cup-id} :path-params} request]
-    (ring-resp/response (db/cup id))))
+  (let [{{id :cup-id} :path-params} request
+        cup (db/cup id)]
+    (if cup
+      (ring-resp/response cup)
+      (ring-resp/not-found (error-body (format "Cup with id %s was not found" id))))))
 
 
 (def error-interceptor
   (error/error-dispatch
    [ctx ex]
    [{:exception-type :java.lang.AssertionError}]
-   (assoc ctx :response (ring-resp/bad-request (:cause (Throwable->map ex))))
+   (assoc ctx :response (ring-resp/bad-request (error-body (:cause (Throwable->map ex)))))
 
    :else
    (assoc ctx :io.pedestal.interceptor.chain/error ex)))
 
 
-(def common-interceptors [error-interceptor (body-params/body-params) http/json-body])
+(def common-interceptors [(body-params/body-params) 
+                          http/json-body
+                          error-interceptor])
 
 
 (def routes #{["/" :get (conj common-interceptors `home-page)]

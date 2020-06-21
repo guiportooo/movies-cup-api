@@ -4,8 +4,8 @@
             [io.pedestal.http.body-params :as body-params]
             [io.pedestal.interceptor.error :as error]
             [ring.util.response :as ring-resp]
-            [movies-cup-api.seed :as s]
-            [movies-cup-api.logic :as l]
+            [movies-cup-api.seed :as seed]
+            [movies-cup-api.logic :as logic]
             [movies-cup-api.db :as db]))
 
 
@@ -16,13 +16,13 @@
 
 (defn get-movies
   [request]
-  (ring-resp/response s/movies))
+  (ring-resp/response seed/movies))
 
 
 (defn create-cup
   [request]
   (let [movies (:json-params request)
-        cup (l/movies-cup movies)
+        cup (logic/movies-cup movies)
         url (route/url-for ::get-cup :params {:cup-id (:id cup)})]
     (db/add-cup! cup)
     (ring-resp/created url cup)))

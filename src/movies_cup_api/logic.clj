@@ -1,13 +1,13 @@
 (ns movies-cup-api.logic
   (:import (java.util UUID))
-  (:require [movies-cup-api.model :as m]
+  (:require [movies-cup-api.model :as model]
             [schema.core :as s]
             [clojure.string :as str]))
 
 
-(s/defn phase-one-matches :- [m/Match]
-  [movies :- [m/Movie]
-   matches :- [m/Match]]
+(s/defn ^:private phase-one-matches :- [model/Match]
+  [movies :- [model/Movie]
+   matches :- [model/Match]]
   (if (empty? movies)
     matches
     (recur (rest (butlast movies))
@@ -15,38 +15,38 @@
                           :right (last movies)}))))
 
 
-(s/defn phase-one :- [m/Match]
-  [movies :- [m/Movie]]
+(s/defn phase-one :- [model/Match]
+  [movies :- [model/Movie]]
   (let [by-title (sort-by :title movies)]
     (phase-one-matches by-title [])))
 
 
-(s/defn match-result :- m/MatchResult
-  [match :- m/Match]
+(s/defn match-result :- model/MatchResult
+  [match :- model/Match]
   (let [movies [(:left match) (:right match)]
         result (sort-by (juxt (comp - :rating) :title) movies)]
     {:winner (first result)
      :loser (last result)}))
 
 
-(s/defn phase-two-round-winners :- [m/Movie]
-  [matches :- [m/Match]]
+(s/defn ^:private phase-two-round-winners :- [model/Movie]
+  [matches :- [model/Match]]
   (->> matches
        (map match-result)
        (map :winner)))
 
 
-(s/defn phase-two-next-round :- [m/Match]
-  [movies :- [m/Movie]
-   round :- [m/Match]]
+(s/defn ^:private phase-two-next-round :- [model/Match]
+  [movies :- [model/Movie]
+   round :- [model/Match]]
   (if (empty? movies)
     round
     (recur (rest (rest movies)) (conj round {:left (first movies)
                                              :right (second movies)}))))
 
 
-(s/defn phase-two :- m/MatchResult
-  [matches :- [m/Match]]
+(s/defn phase-two :- model/MatchResult
+  [matches :- [model/Match]]
   (let [winners (phase-two-round-winners matches)]
     (if (== (count winners) 2)
       (match-result {:left (first winners)
@@ -54,25 +54,25 @@
       (recur (phase-two-next-round winners [])))))
 
 
-(s/defn finals :- m/CupResult
+(s/defn ^:private finals :- model/CupResult
   [id :- s/Str
-   last-match :- m/MatchResult]
+   last-match :- model/MatchResult]
   {:id id
    :first (:winner last-match)
    :second (:loser last-match)})
 
 
-(s/defn titleless? :- s/Bool
-  [movie :- m/Movie]
+(s/defn ^:private titleless? :- s/Bool
+  [movie :- model/Movie]
   (str/blank? (:title movie)))
 
 
-(s/defn movies-cup :- m/CupResult
-  ([movies :- [m/Movie]]
+(s/defn movies-cup :- model/CupResult
+  ([movies :- [model/Movie]]
    (movies-cup (str (UUID/randomUUID)) movies))
   
   ([id :- s/Str
-    movies :- [m/Movie]]
+    movies :- [model/Movie]]
    {:pre [(= (count movies) 8)
           (empty? (filter titleless? movies))]}
    (let [phase-one-result (phase-one movies)

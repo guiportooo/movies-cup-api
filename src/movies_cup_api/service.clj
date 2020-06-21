@@ -1,5 +1,6 @@
 (ns movies-cup-api.service
   (:require [io.pedestal.http :as http]
+            [io.pedestal.http.route :as route]
             [io.pedestal.http.body-params :as body-params]
             [ring.util.response :as ring-resp]
             [movies-cup-api.seed :as s]
@@ -14,36 +15,37 @@
 
 (defn get-movies
   [request]
-  (http/json-response s/movies))
+  (ring-resp/response s/movies))
 
 
 (defn create-cup
   [request]
   (let [movies (:json-params request)
-        cup (l/movies-cup movies)]
+        cup (l/movies-cup movies)
+        url (route/url-for ::get-cup :params {:cup-id (:id cup)})]
     (db/add-cup! cup)
-    (http/json-response cup)))
+    (ring-resp/created url cup)))
 
 
 (defn get-cups
   [request]
-  (http/json-response (db/all-cups)))
+  (ring-resp/response (db/all-cups)))
 
 
 (defn get-cup
   [request]
-  (let [{{id :id} :path-params} request]
-    (http/json-response (db/cup id))))
+  (let [{{id :cup-id} :path-params} request]
+    (ring-resp/response (db/cup id))))
 
 
-(def common-interceptors [(body-params/body-params) http/html-body])
+(def common-interceptors [(body-params/body-params) http/json-body])
 
 
 (def routes #{["/" :get (conj common-interceptors `home-page)]
               ["/movies" :get (conj common-interceptors `get-movies)]
               ["/cups" :post (conj common-interceptors `create-cup)]
               ["/cups" :get (conj common-interceptors `get-cups)]
-              ["/cups/:id" :get (conj common-interceptors `get-cup)]})
+              ["/cups/:cup-id" :get (conj common-interceptors `get-cup)]})
 
 
 (def service {:env :prod

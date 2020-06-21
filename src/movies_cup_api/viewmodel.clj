@@ -6,3 +6,7 @@
             :title s/Str
             :year s/Int
             :rating s/Num})
+
+(def Cup {:id s/Str
+          :first Movie
+          :second Movie})

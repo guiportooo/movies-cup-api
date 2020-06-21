@@ -164,7 +164,15 @@
     (is (= '() (logic/filtered-movies sorted-movies ["abc"]))))
 
   (testing "Returns only the movies with the same ids as the informed ones"
-    (are [result movies ids] (= result (logic/filtered-movies movies ids))
+    (are [filtered movies ids] (= filtered (logic/filtered-movies movies ids))
       [movie1] sorted-movies ["1"]
       [movie4 movie6] sorted-movies ["6" "4"]
       [movie7 movie3 movie1] reversed-movies ["3" "1" "7"])))
+
+
+(deftest valid-number-of-movies?-test
+  (testing "Is valid when number is equal to 8"
+    (are [valid? number] (= valid? (logic/valid-number-of-movies? number))
+      true  8
+      false 7
+      false 9)))

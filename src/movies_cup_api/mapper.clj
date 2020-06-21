@@ -1,12 +1,16 @@
 (ns movies-cup-api.mapper
   (:require [movies-cup-api.model :as model]
             [movies-cup-api.viewmodel :as viewmodel]
+            [movies-cup-api.logic :as logic]
             [schema.core :as s]))
 
 
 (s/defn participating-movies :- viewmodel/ParticipatingMovies
   [ids]
-  (map str ids))
+  (let [number-of-movies (count ids)]
+    (if (logic/valid-number-of-movies? number-of-movies)
+      (map str ids)
+      (throw (ex-info "Required 8 movies to run cup" {:received-number number-of-movies})))))
 
 
 (s/defn movie-model->movie-viewmodel :- viewmodel/Movie
@@ -36,6 +40,6 @@
   (map cup-model->cup-viewmodel cups-model))
 
 
-(s/defn message->response-error :- [viewmodel/ResponseError]
+(s/defn message->response-error :- viewmodel/ResponseError
   [message :- s/Str]
   {:message message})

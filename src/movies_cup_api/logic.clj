@@ -62,9 +62,14 @@
    :second (:loser last-match)})
 
 
-(s/defn ^:private titleless? :- s/Bool
-  [movie :- model/Movie]
-  (str/blank? (:title movie)))
+(s/defn valid-number-of-movies? :- s/Bool
+  [number :- s/Int]
+  (= number 8))
+
+
+(s/defn ^:private all-movies-have-title? :- s/Bool
+  [movies :- [model/Movie]]
+  (empty? (filter #(str/blank? (:title %)) movies)))
 
 
 (s/defn movies-cup :- model/CupResult
@@ -73,8 +78,8 @@
   
   ([id :- s/Str
     movies :- [model/Movie]]
-   {:pre [(= (count movies) 8)
-          (empty? (filter titleless? movies))]}
+   {:pre [(valid-number-of-movies? (count movies))
+          (all-movies-have-title? movies)]}
    (let [phase-one-result (phase-one movies)
          phase-two-result (phase-two phase-one-result)]
      (finals id phase-two-result))))

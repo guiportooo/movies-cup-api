@@ -4,6 +4,11 @@
             [schema.core :as s]))
 
 
+(s/defn participating-movies :- viewmodel/ParticipatingMovies
+  [ids]
+  (map str ids))
+
+
 (s/defn movie-model->movie-viewmodel :- viewmodel/Movie
   [movie-model :- model/Movie]
   (merge {}
@@ -29,3 +34,8 @@
 (s/defn cups-model->cups-viewmodel :- [viewmodel/Cup]
   [cups-model :- [model/CupResult]]
   (map cup-model->cup-viewmodel cups-model))
+
+
+(s/defn message->response-error :- [viewmodel/ResponseError]
+  [message :- s/Str]
+  {:message message})

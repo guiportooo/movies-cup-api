@@ -10,11 +10,6 @@
             [movies-cup-api.mapper :as mapper]))
 
 
-(defn error-body 
-  [message]
-  {:message message})
-
-
 (defn home-page
   [request]
   (ring-resp/response "Movies Cup Api"))
@@ -51,14 +46,16 @@
         cup                         (db/cup id)]
     (if cup
       (ring-resp/response (mapper/cup-model->cup-viewmodel cup))
-      (ring-resp/not-found (error-body (format "Cup with id %s was not found" id))))))
+      (ring-resp/not-found 
+       (mapper/message->response-error (format "Cup with id %s was not found" id))))))
 
 
 (def error-interceptor
   (error/error-dispatch
    [ctx ex]
    [{:exception-type :java.lang.AssertionError}]
-   (assoc ctx :response (ring-resp/bad-request (error-body (:cause (Throwable->map ex)))))
+   (assoc ctx :response (ring-resp/bad-request 
+                         (mapper/message->response-error (:cause (Throwable->map ex)))))
 
    :else
    (assoc ctx :io.pedestal.interceptor.chain/error ex)))

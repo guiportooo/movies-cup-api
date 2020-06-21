@@ -157,3 +157,14 @@
       {:winner movie6 :loser movie1} phase-two-matches1
       {:winner movie6 :loser movie3} phase-two-matches2
       {:winner movie6 :loser movie2} phase-two-matches3)))
+
+
+(deftest filtered-movies-test
+  (testing "Returns empty coll when no movies with the same ids exists"
+    (is (= '() (logic/filtered-movies sorted-movies ["abc"]))))
+
+  (testing "Returns only the movies with the same ids as the informed ones"
+    (are [result movies ids] (= result (logic/filtered-movies movies ids))
+      [movie1] sorted-movies ["1"]
+      [movie4 movie6] sorted-movies ["6" "4"]
+      [movie7 movie3 movie1] reversed-movies ["3" "1" "7"])))

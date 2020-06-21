@@ -22,24 +22,25 @@
 
 (defn get-movies
   [request]
-  (let [movies seed/movies
+  (let [movies    seed/movies
         viewmodel (mapper/movies-model->movies-viewmodel movies)]
     (ring-resp/response viewmodel)))
 
 
 (defn create-cup
   [request]
-  (let [movies (:json-params request)
-        cup (logic/movies-cup movies)
-        url (route/url-for ::get-cup :params {:cup-id (:id cup)})
-        viewmodel (mapper/cup-model->cup-viewmodel cup)]
+  (let [ids       (:json-params request)
+        movies    (logic/filtered-movies seed/movies ids)
+        cup       (logic/movies-cup movies)
+        viewmodel (mapper/cup-model->cup-viewmodel cup)
+        url       (route/url-for ::get-cup :params {:cup-id (:id cup)})]
     (db/add-cup! cup)
     (ring-resp/created url viewmodel)))
 
 
 (defn get-cups
   [request]
-  (let [cups (db/all-cups)
+  (let [cups       (db/all-cups)
         viewmodels (mapper/cups-model->cups-viewmodel cups)]
     (ring-resp/response viewmodels)))
 
@@ -47,7 +48,7 @@
 (defn get-cup
   [request]
   (let [{{id :cup-id} :path-params} request
-        cup (db/cup id)]
+        cup                         (db/cup id)]
     (if cup
       (ring-resp/response (mapper/cup-model->cup-viewmodel cup))
       (ring-resp/not-found (error-body (format "Cup with id %s was not found" id))))))

@@ -78,3 +78,9 @@
    (let [phase-one-result (phase-one movies)
          phase-two-result (phase-two phase-one-result)]
      (finals id phase-two-result))))
+
+
+(s/defn filtered-movies :- [model/Movie]
+  [movies :- [model/Movie]
+   ids :- [s/Str]]
+  (filter (fn [movie] (some #(= (:id movie) %) ids)) movies))

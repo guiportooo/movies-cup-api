@@ -1,11 +1,11 @@
 (ns movies-cup-api.adapters
   (:require [movies-cup-api.schemas :as schemas]
-            [movies-cup-api.viewmodel :as viewmodel]
+            [movies-cup-api.models :as models]
             [movies-cup-api.logic :as logic]
             [schema.core :as s]))
 
 
-(s/defn participating-movies :- viewmodel/ParticipatingMovies
+(s/defn ParticipatingMovies :- models/ParticipatingMovies
   [ids]
   (let [number-of-movies (count ids)]
     (if (logic/valid-number-of-movies? number-of-movies)
@@ -13,33 +13,33 @@
       (throw (ex-info "Required 8 movies to run cup" {:received-number number-of-movies})))))
 
 
-(s/defn movie-model->movie-viewmodel :- viewmodel/Movie
-  [movie-model :- schemas/Movie]
+(s/defn Movie->MovieModel :- models/MovieModel
+  [movie :- schemas/Movie]
   (merge {}
-         {:id (:id movie-model)
-          :title (:title movie-model)
-          :year (:year movie-model)
-          :rating (:rating movie-model)}))
+         {:id (:id movie)
+          :title (:title movie)
+          :year (:year movie)
+          :rating (:rating movie)}))
 
 
-(s/defn movies-model->movies-viewmodel :- [viewmodel/Movie]
-  [movies-model :- [schemas/Movie]]
-  (map movie-model->movie-viewmodel movies-model))
+(s/defn Movies->MovieModels :- [models/MovieModel]
+  [movies :- [schemas/Movie]]
+  (map Movie->MovieModel movies))
 
 
-(s/defn cup-model->cup-viewmodel :- viewmodel/Cup
-  [cup-model :- schemas/CupResult]
+(s/defn CupResult->CupModel :- models/CupModel
+  [cup-result :- schemas/CupResult]
   (merge {}
-         {:id (:id cup-model)
-          :first (:first cup-model)
-          :second (:second cup-model)}))
+         {:id (:id cup-result)
+          :first (:first cup-result)
+          :second (:second cup-result)}))
 
 
-(s/defn cups-model->cups-viewmodel :- [viewmodel/Cup]
-  [cups-model :- [schemas/CupResult]]
-  (map cup-model->cup-viewmodel cups-model))
+(s/defn CupResults->CupModels :- [models/CupModel]
+  [cup-results :- [schemas/CupResult]]
+  (map CupResult->CupModel cup-results))
 
 
-(s/defn message->response-error :- viewmodel/ResponseError
+(s/defn message->ErrorMessage :- models/ErrorMessage
   [message :- s/Str]
   {:message message})

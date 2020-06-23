@@ -1,7 +1,7 @@
 (ns movies-cup-api.logic-test
   (:import (java.util UUID))
   (:require [movies-cup-api.logic :as logic]
-            [movies-cup-api.model :as model]
+            [movies-cup-api.schemas :as schemas]
             [clojure.test :refer :all]
             [schema.core :as s]
             [schema-generators.generators :as g]
@@ -69,7 +69,7 @@
 
 
 (def movie-generator
-  (g/generator model/Movie {s/Str (gen/fmap not-empty-str gen/string-alphanumeric)
+  (g/generator schemas/Movie {s/Str (gen/fmap not-empty-str gen/string-alphanumeric)
                         s/Int gen/pos-int
                         s/Num (gen/double* {:min 0})}))
 

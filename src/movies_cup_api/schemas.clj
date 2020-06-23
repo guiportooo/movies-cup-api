@@ -1,4 +1,4 @@
-(ns movies-cup-api.model
+(ns movies-cup-api.schemas
   (:require [schema.core :as s]))
 
 

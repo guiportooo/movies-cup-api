@@ -1,4 +1,4 @@
-(ns movies-cup-api.mapper
+(ns movies-cup-api.adapters
   (:require [movies-cup-api.model :as model]
             [movies-cup-api.viewmodel :as viewmodel]
             [movies-cup-api.logic :as logic]

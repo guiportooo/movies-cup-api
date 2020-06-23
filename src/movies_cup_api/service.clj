@@ -7,7 +7,7 @@
             [movies-cup-api.seed :as seed]
             [movies-cup-api.logic :as logic]
             [movies-cup-api.db :as db]
-            [movies-cup-api.mapper :as mapper]))
+            [movies-cup-api.adapters :as adapters]))
 
 
 (defn home-page
@@ -18,17 +18,17 @@
 (defn get-movies
   [request]
   (let [movies    seed/movies
-        viewmodel (mapper/movies-model->movies-viewmodel movies)]
+        viewmodel (adapters/movies-model->movies-viewmodel movies)]
     (ring-resp/response viewmodel)))
 
 
 (defn create-cup
   [request]
   (let [ids                  (:json-params request)
-        participating-movies (mapper/participating-movies ids)
+        participating-movies (adapters/participating-movies ids)
         movies               (logic/filtered-movies seed/movies participating-movies)
         cup                  (logic/movies-cup movies)
-        viewmodel            (mapper/cup-model->cup-viewmodel cup)
+        viewmodel            (adapters/cup-model->cup-viewmodel cup)
         url                  (route/url-for ::get-cup :params {:cup-id (:id cup)})]
     (db/add-cup! cup)
     (ring-resp/created url viewmodel)))
@@ -37,7 +37,7 @@
 (defn get-cups
   [request]
   (let [cups       (db/all-cups)
-        viewmodels (mapper/cups-model->cups-viewmodel cups)]
+        viewmodels (adapters/cups-model->cups-viewmodel cups)]
     (ring-resp/response viewmodels)))
 
 
@@ -46,9 +46,9 @@
   (let [{{id :cup-id} :path-params} request
         cup                         (db/cup id)]
     (if cup
-      (ring-resp/response (mapper/cup-model->cup-viewmodel cup))
+      (ring-resp/response (adapters/cup-model->cup-viewmodel cup))
       (ring-resp/not-found 
-       (mapper/message->response-error (format "Cup with id %s was not found" id))))))
+       (adapters/message->response-error (format "Cup with id %s was not found" id))))))
 
 
 (def error-interceptor
@@ -56,11 +56,11 @@
    [ctx ex]
    [{:exception-type :clojure.lang.ExceptionInfo}]
    (assoc ctx :response (ring-resp/bad-request 
-                         (mapper/message->response-error (:cause (Throwable->map ex)))))
+                         (adapters/message->response-error (:cause (Throwable->map ex)))))
 
    [{:exception-type :java.lang.AssertionError}]
    (assoc ctx :response (ring-resp/bad-request 
-                         (mapper/message->response-error (:cause (Throwable->map ex)))))
+                         (adapters/message->response-error (:cause (Throwable->map ex)))))
 
    :else
    (assoc ctx :io.pedestal.interceptor.chain/error ex)))

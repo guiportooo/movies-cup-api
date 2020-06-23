@@ -1,4 +1,4 @@
-(ns movies-cup-api.db)
+(ns movies-cup-api.dbs.cups)
 
 
 (def cups (atom {}))

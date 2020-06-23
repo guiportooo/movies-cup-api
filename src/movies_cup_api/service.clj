@@ -4,9 +4,9 @@
             [io.pedestal.http.body-params :as body-params]
             [io.pedestal.interceptor.error :as error]
             [ring.util.response :as ring-resp]
-            [movies-cup-api.seed :as seed]
             [movies-cup-api.logic :as logic]
-            [movies-cup-api.db :as db]
+            [movies-cup-api.dbs.movies :as dbs.movies]
+            [movies-cup-api.dbs.cups :as dbs.cups]
             [movies-cup-api.adapters :as adapters]))
 
 
@@ -17,7 +17,7 @@
 
 (defn get-movies
   [request]
-  (let [movies    seed/movies
+  (let [movies    (dbs.movies/all-movies)
         viewmodel (adapters/movies-model->movies-viewmodel movies)]
     (ring-resp/response viewmodel)))
 
@@ -26,17 +26,17 @@
   [request]
   (let [ids                  (:json-params request)
         participating-movies (adapters/participating-movies ids)
-        movies               (logic/filtered-movies seed/movies participating-movies)
+        movies               (logic/filtered-movies (dbs.movies/all-movies) participating-movies)
         cup                  (logic/movies-cup movies)
         viewmodel            (adapters/cup-model->cup-viewmodel cup)
         url                  (route/url-for ::get-cup :params {:cup-id (:id cup)})]
-    (db/add-cup! cup)
+    (dbs.cups/add-cup! cup)
     (ring-resp/created url viewmodel)))
 
 
 (defn get-cups
   [request]
-  (let [cups       (db/all-cups)
+  (let [cups       (dbs.cups/all-cups)
         viewmodels (adapters/cups-model->cups-viewmodel cups)]
     (ring-resp/response viewmodels)))
 
@@ -44,7 +44,7 @@
 (defn get-cup
   [request]
   (let [{{id :cup-id} :path-params} request
-        cup                         (db/cup id)]
+        cup                         (dbs.cups/cup id)]
     (if cup
       (ring-resp/response (adapters/cup-model->cup-viewmodel cup))
       (ring-resp/not-found 

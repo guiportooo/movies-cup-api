@@ -10,7 +10,7 @@
   (let [number-of-movies (count ids)]
     (if (logic/valid-number-of-movies? number-of-movies)
       (map str ids)
-      (throw (ex-info "Required 8 movies to run cup" {:received-number number-of-movies})))))
+      (throw (ex-info "Required 8 movies to run cup" {:received number-of-movies})))))
 
 
 (s/defn Movie->MovieModel :- models/MovieModel

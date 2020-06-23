@@ -4,9 +4,7 @@
             [io.pedestal.http.body-params :as body-params]
             [ring.util.response :as ring-resp]
             [movies-cup-api.interceptors :as interceptors]
-            [movies-cup-api.logic :as logic]
-            [movies-cup-api.dbs.movies :as dbs.movies]
-            [movies-cup-api.dbs.cups :as dbs.cups]
+            [movies-cup-api.controllers :as controllers]
             [movies-cup-api.adapters :as adapters]))
 
 
@@ -17,38 +15,25 @@
 
 (defn get-movies
   [request]
-  (let [movies    (dbs.movies/all-movies)
-        movie-models (adapters/Movies->MovieModels movies)]
-    (ring-resp/response movie-models)))
+  (ring-resp/response (controllers/get-movies)))
 
 
 (defn create-cup
-  [request]
-  (let [ids                  (:json-params request)
-        participating-movies (adapters/ParticipatingMovies ids)
-        movies               (logic/filtered-movies (dbs.movies/all-movies) participating-movies)
-        cup                  (logic/movies-cup movies)
-        cup-model            (adapters/CupResult->CupModel cup)
+  [{ids :json-params}]
+  (let [participating-movies (adapters/ParticipatingMovies ids)
+        cup                  (controllers/create-cup participating-movies)
         url                  (route/url-for ::get-cup :params {:cup-id (:id cup)})]
-    (dbs.cups/add-cup! cup)
-    (ring-resp/created url cup-model)))
+    (ring-resp/created url cup)))
 
 
 (defn get-cups
   [request]
-  (let [cups       (dbs.cups/all-cups)
-        cup-models (adapters/CupResults->CupModels cups)]
-    (ring-resp/response cup-models)))
+    (ring-resp/response (controllers/get-cups)))
 
 
 (defn get-cup
-  [request]
-  (let [{{id :cup-id} :path-params} request
-        cup                         (dbs.cups/cup id)]
-    (if cup
-      (ring-resp/response (adapters/CupResult->CupModel cup))
-      (ring-resp/not-found 
-       (adapters/message->ErrorMessage (format "Cup with id %s was not found" id))))))
+  [{{:keys [cup-id]} :path-params}]
+  (ring-resp/response (controllers/get-cup cup-id)))
 
 
 (def common-interceptors [(body-params/body-params) 

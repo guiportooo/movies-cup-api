@@ -2,8 +2,8 @@
   (:require [io.pedestal.http :as http]
             [io.pedestal.http.route :as route]
             [io.pedestal.http.body-params :as body-params]
-            [io.pedestal.interceptor.error :as error]
             [ring.util.response :as ring-resp]
+            [movies-cup-api.interceptors :as interceptors]
             [movies-cup-api.logic :as logic]
             [movies-cup-api.dbs.movies :as dbs.movies]
             [movies-cup-api.dbs.cups :as dbs.cups]
@@ -51,24 +51,9 @@
        (adapters/message->ErrorMessage (format "Cup with id %s was not found" id))))))
 
 
-(def error-interceptor
-  (error/error-dispatch
-   [ctx ex]
-   [{:exception-type :clojure.lang.ExceptionInfo}]
-   (assoc ctx :response (ring-resp/bad-request 
-                         (adapters/message->ErrorMessage (:cause (Throwable->map ex)))))
-
-   [{:exception-type :java.lang.AssertionError}]
-   (assoc ctx :response (ring-resp/bad-request 
-                         (adapters/message->ErrorMessage (:cause (Throwable->map ex)))))
-
-   :else
-   (assoc ctx :io.pedestal.interceptor.chain/error ex)))
-
-
 (def common-interceptors [(body-params/body-params) 
                           http/json-body
-                          error-interceptor])
+                          interceptors/error-interceptor])
 
 
 (def routes #{["/" :get (conj common-interceptors `home-page)]

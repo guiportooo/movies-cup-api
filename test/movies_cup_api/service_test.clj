@@ -1,39 +1,136 @@
 (ns movies-cup-api.service-test
   (:require [clojure.test :refer :all]
-            [io.pedestal.test :refer :all]
+            [io.pedestal.test :as test]
             [io.pedestal.http :as bootstrap]
-            [movies-cup-api.service :as service]))
+            [io.pedestal.http.route :as http.routes]
+            [cheshire.core :as cheshire]
+            [clojure.string :as str]
+            [clojure.walk :as walk]
+            [movies-cup-api.service :as service]
+            [movies-cup-api.dbs.movies :as dbs.movies]
+            [movies-cup-api.dbs.cups :as dbs.cups]))
+
+
+(defn- parse-body
+  [response]
+  (cheshire/parse-string (:body response) true))
+
+
+(defn- serialize-body
+  [body]
+  (cheshire/generate-string body))
+
+
+(defn parse-headers
+  [response]
+  (walk/keywordize-keys (:headers response)))
+
 
 (def service
   (::bootstrap/service-fn (bootstrap/create-servlet service/service)))
 
+
+(def url-for (http.routes/url-for-routes (http.routes/expand-routes service/routes)))
+
+
+(def all-movies dbs.movies/movies-seed)
+
+
+(def participating-movies ["1", "2", "3", "4", "5", "6", "7", "8"])
+
+
+(defn created-cup
+  [id]
+  {:id id
+   :first {:id "6"
+           :title "Title6"
+           :year 2020
+           :rating 9.7}
+   :second {:id "8"
+            :title "Title8"
+            :year 2020
+            :rating 8.9}})
+
+
+(def cup-1 {:id "1"
+                :first {:id "6"
+                        :title "Title6"
+                        :year 2020
+                        :rating 9.7}
+                :second {:id "8"
+                         :title "Title8"
+                         :year 2020
+                         :rating 8.9}})
+
+
+(def all-cups {"1" cup-1
+               "2" {:id "1"
+                    :first {:id "1"
+                            :title "Title1"
+                            :year 2019
+                            :rating 8.0}
+                    :second {:id "2"
+                             :title "Title2"
+                             :year 2020
+                             :rating 9.1}}})
+
+
+(defn clean-dbs
+  [test-fn]
+  (test-fn)
+  (reset! dbs.movies/movies dbs.movies/movies-seed)
+  (reset! dbs.cups/cups {}))
+
+
+(use-fixtures :each clean-dbs)
+
+
 (deftest home-page-test
   (is (=
-       (:body (response-for service :get "/"))
-       "Hello World!"))
-  (is (=
-       (:headers (response-for service :get "/"))
-       {"Content-Type" "text/html;charset=UTF-8"
-        "Strict-Transport-Security" "max-age=31536000; includeSubdomains"
-        "X-Frame-Options" "DENY"
-        "X-Content-Type-Options" "nosniff"
-        "X-XSS-Protection" "1; mode=block"
-        "X-Download-Options" "noopen"
-        "X-Permitted-Cross-Domain-Policies" "none"
-        "Content-Security-Policy" "object-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' 'strict-dynamic' https: http:;"})))
+       (:body (test/response-for service :get "/"))
+       "Movies Cup Api")))
 
-(deftest about-page-test
-  (is (.contains
-       (:body (response-for service :get "/about"))
-       "Clojure 1.9"))
-  (is (=
-       (:headers (response-for service :get "/about"))
-       {"Content-Type" "text/html;charset=UTF-8"
-        "Strict-Transport-Security" "max-age=31536000; includeSubdomains"
-        "X-Frame-Options" "DENY"
-        "X-Content-Type-Options" "nosniff"
-        "X-XSS-Protection" "1; mode=block"
-        "X-Download-Options" "noopen"
-        "X-Permitted-Cross-Domain-Policies" "none"
-        "Content-Security-Policy" "object-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' 'strict-dynamic' https: http:;"})))
 
+(deftest get-movies-test
+  (testing "Returns all sixteen movies"
+    (let [response (test/response-for service :get (url-for ::service/get-movies))
+          status   (:status response)
+          body     (parse-body response)]
+      (is (= status 200))
+      (is (= body all-movies)))))
+
+
+(deftest create-cup-test
+  (testing "Runs cup with participating movies and returns created cup"
+    (let [response (test/response-for service
+                                      :post (url-for ::service/create-cup) 
+                                      :headers {"Content-Type" "application/json"}
+                                      :body (serialize-body participating-movies))
+          status   (:status response)
+          headers  (parse-headers response)
+          location (:Location headers)
+          cup-id   (last (str/split location #"/"))
+          body     (parse-body response)]
+      (is (= status 201))
+      (is (= body (created-cup cup-id))))))
+
+
+(deftest get-cups-test
+  (testing "Returns all cups"
+    (reset! dbs.cups/cups all-cups)
+    (let [response (test/response-for service :get (url-for ::service/get-cups))
+          status   (:status response)
+          body     (parse-body response)]
+      (is (= status 200))
+      (is (= body (vals all-cups))))))
+
+
+(deftest get-cup-test
+  (testing "Returns cup with id"
+    (reset! dbs.cups/cups all-cups)
+    (let [response (test/response-for service :get (url-for ::service/get-cup
+                                                            :path-params {:cup-id (:id cup-1)}))
+          status   (:status response)
+          body     (parse-body response)]
+      (is (= status 200))
+      (is (= body cup-1)))))

@@ -1,7 +1,6 @@
 (ns movies-cup-api.dbs.movies)
 
-
-(def movies (atom [{:id "1"
+(def movies-seed [{:id "1"
                    :title "Title1"
                    :year 2018
                    :rating 7.8}
@@ -79,7 +78,10 @@
                   {:id "16"
                    :title "Title16"
                    :year 2020
-                   :rating 7.8}]))
+                   :rating 7.8}])
+
+
+(def movies (atom movies-seed))
 
 
 (defn all-movies [] @movies)

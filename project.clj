@@ -12,7 +12,8 @@
                  [org.slf4j/log4j-over-slf4j "1.7.26"]
                  [prismatic/schema "1.1.12"]
                  [prismatic/schema-generators "0.1.3"]
-                 [cheshire "5.10.0"]]
+                 [cheshire "5.10.0"]
+                 [com.stuartsierra/component "1.0.0"]]
   :min-lein-version "2.0.0"
   :resource-paths ["config", "resources"]
   :profiles {:dev {:aliases {"run-dev" ["trampoline" "run" "-m" "movies-cup-api.server/run-dev"]}

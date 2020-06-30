@@ -1,11 +1,13 @@
 (ns movies-cup-api.service-test
   (:require [clojure.test :refer :all]
             [io.pedestal.test :as test]
-            [io.pedestal.http :as bootstrap]
+            [io.pedestal.http :as http]
             [io.pedestal.http.route :as http.routes]
+            [com.stuartsierra.component :as component]
             [cheshire.core :as cheshire]
             [clojure.string :as str]
             [clojure.walk :as walk]
+            [movies-cup-api.system :as system]
             [movies-cup-api.service :as service]
             [movies-cup-api.dbs.movies :as dbs.movies]
             [movies-cup-api.dbs.cups :as dbs.cups]))
@@ -26,11 +28,21 @@
   (walk/keywordize-keys (:headers response)))
 
 
-(def service
-  (::bootstrap/service-fn (bootstrap/create-servlet service/service)))
-
-
 (def url-for (http.routes/url-for-routes (http.routes/expand-routes service/routes)))
+
+
+(defn service-fn
+  [system]
+  (get-in system [:pedestal :service ::http/service-fn]))
+
+
+(defmacro with-system
+  [[bound-var binding-expr] & body]
+  `(let [~bound-var (component/start ~binding-expr)]
+     (try
+       ~@body
+       (finally
+         (component/stop ~bound-var)))))
 
 
 (def all-movies dbs.movies/movies-seed)
@@ -86,51 +98,62 @@
 
 
 (deftest home-page-test
-  (is (=
-       (:body (test/response-for service :get "/"))
-       "Movies Cup Api")))
+  (testing "Returns Movies Cup Api"
+    (with-system [sut (system/new-system :test)]
+      (let [service               (service-fn sut)
+            {:keys [status body]} (test/response-for service :get (url-for ::service/home-page))]
+        (is (= 200 status))
+        (is (= "Movies Cup Api" body))))))
 
 
 (deftest get-movies-test
   (testing "Returns all sixteen movies"
-    (let [response (test/response-for service :get (url-for ::service/get-movies))
-          status   (:status response)
-          body     (parse-body response)]
-      (is (= status 200))
-      (is (= body all-movies)))))
+    (with-system [sut (system/new-system :test)]
+      (let [service  (service-fn sut)
+            response (test/response-for service :get (url-for ::service/get-movies))
+            status   (:status response)
+            body     (parse-body response)]
+        (is (= status 200))
+        (is (= body all-movies))))))
 
 
 (deftest create-cup-test
   (testing "Runs cup with participating movies and returns created cup"
-    (let [response (test/response-for service
-                                      :post (url-for ::service/create-cup) 
-                                      :headers {"Content-Type" "application/json"}
-                                      :body (serialize-body participating-movies))
-          status   (:status response)
-          headers  (parse-headers response)
-          location (:Location headers)
-          cup-id   (last (str/split location #"/"))
-          body     (parse-body response)]
-      (is (= status 201))
-      (is (= body (created-cup cup-id))))))
+    (with-system [sut (system/new-system :test)]
+      (let [service  (service-fn sut)
+            response (test/response-for service
+                                        :post (url-for ::service/create-cup)
+                                        :headers {"Content-Type" "application/json"}
+                                        :body (serialize-body participating-movies))
+            status   (:status response)
+            headers  (parse-headers response)
+            location (:Location headers)
+            cup-id   (last (str/split location #"/"))
+            body     (parse-body response)]
+        (is (= status 201))
+        (is (= body (created-cup cup-id)))))))
 
 
 (deftest get-cups-test
   (testing "Returns all cups"
     (reset! dbs.cups/cups all-cups)
-    (let [response (test/response-for service :get (url-for ::service/get-cups))
-          status   (:status response)
-          body     (parse-body response)]
-      (is (= status 200))
-      (is (= body (vals all-cups))))))
+    (with-system [sut (system/new-system :test)]
+      (let [service  (service-fn sut)
+            response (test/response-for service :get (url-for ::service/get-cups))
+            status   (:status response)
+            body     (parse-body response)]
+        (is (= status 200))
+        (is (= body (vals all-cups)))))))
 
 
 (deftest get-cup-test
   (testing "Returns cup with id"
     (reset! dbs.cups/cups all-cups)
-    (let [response (test/response-for service :get (url-for ::service/get-cup
-                                                            :path-params {:cup-id (:id cup-1)}))
-          status   (:status response)
-          body     (parse-body response)]
-      (is (= status 200))
-      (is (= body cup-1)))))
+    (with-system [sut (system/new-system :test)]
+      (let [service  (service-fn sut)
+            response (test/response-for service :get (url-for ::service/get-cup
+                                                              :path-params {:cup-id (:id cup-1)}))
+            status   (:status response)
+            body     (parse-body response)]
+        (is (= status 200))
+        (is (= body cup-1))))))

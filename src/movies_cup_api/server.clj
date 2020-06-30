@@ -1,18 +1,20 @@
 (ns movies-cup-api.server
   (:gen-class) 
-  (:require [com.stuartsierra.component :as component]
-            [movies-cup-api.system :as system]))
+  (:require [movies-cup-api.system :as system]))
+
+
+(def system (atom nil))
 
 
 (defn run-dev
   "The entry-point for 'lein run-dev'"
   [& args]
   (println "\nCreating your [DEV] server...")
-  (component/start (system/new-system :dev)))
+  (system/start-system! :dev system))
 
 
 (defn -main
   "The entry-point for 'lein run'"
   [& args]
   (println "\nCreating your server...")
-  (component/start (system/new-system :prod)))
+  (system/start-system! :prod system))

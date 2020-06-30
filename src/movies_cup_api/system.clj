@@ -30,3 +30,15 @@
    :pedestal (component/using
               (pedestal/new-pedestal)
               [:service-map])))
+
+
+(defn start-system! 
+  [system env]
+  (->> (new-system env)
+       component/start
+       (reset! system)))
+
+
+(defn stop-system!
+  [system]
+  (swap! system #(component/stop %)))

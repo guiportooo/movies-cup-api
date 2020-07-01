@@ -1,8 +1,15 @@
 (ns movies-cup-api.interceptors
   (:require [io.pedestal.interceptor.error :as error]
+            [io.pedestal.interceptor :as interceptor]
             [ring.util.response :as ring-resp]
             [movies-cup-api.adapters :as adapters]))
 
+
+(defn components-interceptor
+  [components]
+  (interceptor/interceptor
+   {:name ::components-interceptor
+    :enter #(assoc-in % [:request :components] components)}))
 
 (defn- bad-request
   [ex]

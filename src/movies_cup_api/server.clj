@@ -1,31 +1,20 @@
 (ns movies-cup-api.server
   (:gen-class) 
-  (:require [io.pedestal.http :as server]
-            [io.pedestal.http.route :as route]
-            [movies-cup-api.service :as service]))
+  (:require [movies-cup-api.system :as system]))
 
 
-(defonce runnable-service (server/create-server service/service))
+(def system (atom nil))
 
 
 (defn run-dev
   "The entry-point for 'lein run-dev'"
   [& args]
   (println "\nCreating your [DEV] server...")
-  (-> service/service 
-      (merge {:env :dev
-              ::server/join? false
-              ::server/routes #(route/expand-routes (deref #'service/routes))
-              ::server/allowed-origins {:creds true :allowed-origins (constantly true)}
-              ::server/secure-headers {:content-security-policy-settings {:object-src "'none'"}}})
-      server/default-interceptors
-      server/dev-interceptors
-      server/create-server
-      server/start))
+  (system/start-system! :dev system))
 
 
 (defn -main
   "The entry-point for 'lein run'"
   [& args]
   (println "\nCreating your server...")
-  (server/start runnable-service))
+  (system/start-system! :prod system))

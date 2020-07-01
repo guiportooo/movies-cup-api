@@ -14,26 +14,28 @@
 
 
 (defn get-movies
-  [request]
-  (ring-resp/response (controllers/get-movies)))
+  [{{:keys [storage]} :components}]
+  (ring-resp/response (controllers/get-movies storage)))
 
 
 (defn create-cup
-  [{ids :json-params}]
+  [{ids :json-params
+    {:keys [storage]} :components}]
   (let [participating-movies (adapters/ParticipatingMovies ids)
-        cup                  (controllers/create-cup participating-movies)
+        cup                  (controllers/create-cup participating-movies storage)
         url                  (route/url-for ::get-cup :params {:cup-id (:id cup)})]
     (ring-resp/created url cup)))
 
 
 (defn get-cups
-  [request]
-    (ring-resp/response (controllers/get-cups)))
+  [{{:keys [storage]} :components}]
+    (ring-resp/response (controllers/get-cups storage)))
 
 
 (defn get-cup
-  [{{:keys [cup-id]} :path-params}]
-  (ring-resp/response (controllers/get-cup cup-id)))
+  [{{:keys [cup-id]} :path-params
+    {:keys [storage]} :components}]
+  (ring-resp/response (controllers/get-cup cup-id storage)))
 
 
 (def common-interceptors [(body-params/body-params) 
@@ -46,13 +48,3 @@
               ["/cups" :post (conj common-interceptors `create-cup)]
               ["/cups" :get (conj common-interceptors `get-cups)]
               ["/cups/:cup-id" :get (conj common-interceptors `get-cup)]})
-
-
-(def service {:env :prod
-              ::http/routes routes
-              ::http/resource-path "/public"
-              ::http/type :jetty
-              ::http/port 8080
-              ::http/container-options {:h2c? true
-                                        :h2? false
-                                        :ssl? false}})

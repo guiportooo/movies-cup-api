@@ -3,10 +3,11 @@
             [io.pedestal.http :as http]
             [io.pedestal.http.route :as route]
             [movies-cup-api.components.pedestal :as pedestal]
+            [movies-cup-api.components.storage :as storage]
             [movies-cup-api.service :as service]))
 
 
-(defn service-map
+(defn- service-map
   [env]
   (let [default-map {:env env
                      ::http/routes #(route/expand-routes (deref #'service/routes))
@@ -16,7 +17,7 @@
                      ::http/container-options {:h2c? true
                                                :h2? false
                                                :ssl? false}}]
-    (if (not (pedestal/dev? env))
+    (if (not= :dev env)
       default-map
       (merge default-map {::http/join? false
                           ::http/allowed-origins {:creds true :allowed-origins (constantly true)}
@@ -27,9 +28,10 @@
   [env]
   (component/system-map
    :service-map (service-map env)
-   :pedestal (component/using
-              (pedestal/new-pedestal)
-              [:service-map])))
+   :storage     (storage/new-in-memory)
+   :pedestal    (component/using
+                 (pedestal/new-pedestal)
+                 [:service-map :storage])))
 
 
 (defn start-system! 

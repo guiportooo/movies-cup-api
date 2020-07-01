@@ -1,13 +1,17 @@
-(ns movies-cup-api.dbs.cups)
+(ns movies-cup-api.dbs.cups
+  (:require [movies-cup-api.protocols.storage-client :as storage-client]))
 
 
-(def cups (atom {}))
+(defn add-cup!
+  [cup storage]
+  (storage-client/upsert! storage :cups (:id cup) cup))
 
 
-(defn add-cup! [cup] (swap! cups assoc (:id cup) cup))
+(defn all-cups 
+  [storage] 
+  (vals (storage-client/read-all storage :cups)))
 
 
-(defn all-cups [] (vals @cups))
-
-
-(defn cup [id] (get @cups id))
+(defn cup 
+  [id storage]
+  (get (storage-client/read-all storage :cups) id))

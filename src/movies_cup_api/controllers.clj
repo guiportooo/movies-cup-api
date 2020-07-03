@@ -1,14 +1,10 @@
 (ns movies-cup-api.controllers
   (:require [movies-cup-api.dbs.movies :as dbs.movies]
             [movies-cup-api.dbs.cups :as dbs.cups]
-            [movies-cup-api.logic :as logic]
-            [movies-cup-api.adapters :as adapters]))
+            [movies-cup-api.logic :as logic]))
 
 
-(defn get-movies
-  [storage]
-  (let [movies (dbs.movies/all-movies storage)]
-    (adapters/Movies->MovieModels movies)))
+(defn get-movies [storage] (dbs.movies/all-movies storage))
 
 
 (defn create-cup
@@ -18,18 +14,15 @@
         filtered-movies (logic/filtered-movies all-movies participating-movies)
         cup             (logic/movies-cup filtered-movies)]
     (dbs.cups/add-cup! cup storage)
-    (adapters/CupResult->CupModel cup)))
+    cup))
 
 
-(defn get-cups
-  [storage]
-  (let [cups (dbs.cups/all-cups storage)]
-    (adapters/CupResults->CupModels cups)))
+(defn get-cups [storage] (dbs.cups/all-cups storage))
 
 
 (defn get-cup
   [id
    storage]
   (if-let [cup (dbs.cups/cup id storage)]
-    (adapters/CupResult->CupModel cup)
+    cup
     (throw (ex-info (format "Cup with id %s was not found" id) {:received id}))))

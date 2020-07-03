@@ -15,7 +15,9 @@
 
 (defn get-movies
   [{{:keys [storage]} :components}]
-  (ring-resp/response (controllers/get-movies storage)))
+  (-> (controllers/get-movies storage)
+      adapters/Movies->MovieModels
+      ring-resp/response))
 
 
 (defn create-cup
@@ -24,18 +26,22 @@
   (let [participating-movies (adapters/ParticipatingMovies ids)
         cup                  (controllers/create-cup participating-movies storage)
         url                  (route/url-for ::get-cup :params {:cup-id (:id cup)})]
-    (ring-resp/created url cup)))
+    (ring-resp/created url (adapters/CupResult->CupModel cup))))
 
 
 (defn get-cups
   [{{:keys [storage]} :components}]
-    (ring-resp/response (controllers/get-cups storage)))
+  (-> (controllers/get-cups storage)
+      adapters/CupResults->CupModels
+      ring-resp/response))
 
 
 (defn get-cup
   [{{:keys [cup-id]} :path-params
     {:keys [storage]} :components}]
-  (ring-resp/response (controllers/get-cup cup-id storage)))
+  (-> (controllers/get-cup cup-id storage)
+      adapters/CupResult->CupModel
+      ring-resp/response))
 
 
 (def common-interceptors [(body-params/body-params) 

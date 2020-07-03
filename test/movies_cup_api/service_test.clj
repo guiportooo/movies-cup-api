@@ -65,25 +65,25 @@
 
 
 (def cup-1 {:id "1"
-                :first {:id "6"
-                        :title "Title6"
-                        :year 2020
-                        :rating 9.7}
-                :second {:id "8"
-                         :title "Title8"
-                         :year 2020
-                         :rating 8.9}})
+            :first {:id "6"
+                    :title "Title6"
+                    :year 2020
+                    :rating 9.7}
+            :second {:id "8"
+                     :title "Title8"
+                     :year 2020
+                     :rating 8.9}})
 
 
 (def cup-2 {:id "2"
-                        :first {:id "1"
-                                :title "Title1"
-                                :year 2019
-                                :rating 8.0}
-                        :second {:id "2"
-                                 :title "Title2"
-                                 :year 2020
-                                 :rating 9.1}})
+            :first {:id "1"
+                    :title "Title1"
+                    :year 2019
+                    :rating 8.0}
+            :second {:id "2"
+                     :title "Title2"
+                     :year 2020
+                     :rating 9.1}})
 
 
 (def all-cups [cup-1 cup-2])

@@ -15,11 +15,7 @@
 
 (s/defn Movie->MovieModel :- models/MovieModel
   [movie :- schemas/Movie]
-  (merge {}
-         {:id (:id movie)
-          :title (:title movie)
-          :year (:year movie)
-          :rating (:rating movie)}))
+  (select-keys movie [:id :title :year :rating]))
 
 
 (s/defn Movies->MovieModels :- [models/MovieModel]
@@ -29,10 +25,7 @@
 
 (s/defn CupResult->CupModel :- models/CupModel
   [cup-result :- schemas/CupResult]
-  (merge {}
-         {:id (:id cup-result)
-          :first (:first cup-result)
-          :second (:second cup-result)}))
+  (select-keys cup-result [:id :first :second]))
 
 
 (s/defn CupResults->CupModels :- [models/CupModel]
